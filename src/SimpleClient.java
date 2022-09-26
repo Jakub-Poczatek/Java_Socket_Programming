@@ -1,35 +1,53 @@
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.*;
 import java.io.*;
 import java.util.*;
 import java.text.DateFormat;
 public class SimpleClient {
     public static void main(String args[]) {
-        JFrame f = new JFrame();
-        Container pane = new Container();
-        JLabel message = new JLabel("");
+        //Create the GUI
+        JFrame frame = new JFrame();
+        frame.setTitle("Client/Server Messenger");
+        frame.setSize(600, 300);
+        frame.setLocation(100, 100);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         JButton buttonSend = new JButton("Send");
+        JLabel labelMessage = new JLabel("");
         JButton buttonExit = new JButton("Exit");
-        JTextField textInput = new JTextField("Type here...");
+        JTextField textFieldInput = new JTextField("");
+
+        Container container = frame.getContentPane();
+        container.setLayout(new BorderLayout(8, 6));
+        container.setBackground(Color.lightGray);
+        buttonSend.addActionListener(e -> {
+            try {
+                Socket s1 = new Socket("127.0.0.1", 5432);
+                OutputStream s1out = s1.getOutputStream();
+                DataOutputStream dos = new DataOutputStream(s1out);
+                System.out.println(textFieldInput.getText());
+                dos.writeUTF(textFieldInput.getText());
+                dos.close();
+                s1.close();
+            } catch (IOException ex) {
+                System.out.println(ex);
+            }
+        });
+        frame.add(buttonSend, BorderLayout.WEST);
+        frame.add(buttonExit, BorderLayout.EAST);
+        frame.add(labelMessage, BorderLayout.CENTER);
+        frame.add(textFieldInput, BorderLayout.SOUTH);
+
+        //frame.add(container, BorderLayout.CENTER);
+        frame.setVisible(true);
+
         //Input From Keyboard
         String str;
         DataInputStream indata= new DataInputStream (System.in);
-
-        JPanel p1 = new JPanel(new GridLayout(0, 3));
-        p1.add(buttonSend);
-        p1.add(message);
-        p1.add(buttonExit);
-        JPanel p2 = new JPanel(new GridLayout(0, 1));
-        p2.add(textInput);
-
-        pane.add(p1, BorderLayout.NORTH);
-        pane.add(new JSeparator(), BorderLayout.CENTER);
-        pane.add(p2, BorderLayout.SOUTH);
-        f.add(p1);
-        f.setVisible(true);
-        f.pack();
 
         System.out.println("Type in Something & Press Enter to Send it To The >>S E R V E R<<: ");
 
@@ -69,16 +87,14 @@ public class SimpleClient {
                 str = indata.readLine();
                 dos.writeUTF(str);
 
-                message.setText(str);
-
                 // When done, just close the steam and connection
                 dis.close();
                 dos.close();
                 s1.close();
             } catch (ConnectException connExc) {
-                System.err.println("Could not connect to the server.");
+                System.err.println("Could not connect to the server.\n" + connExc);
             } catch (IOException e) {
-                // ignore
+                System.out.println(e);
             }
         }
     }
